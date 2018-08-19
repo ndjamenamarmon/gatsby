@@ -213,26 +213,30 @@ function inferFromFieldName(value, selector, types): GraphQLFieldConfig<*, *> {
   const [, , linkedField] = key.split(`___`)
 
   const validateLinkedNode = linkedNode => {
-    invariant(
-      linkedNode,
-      oneLine`
-        Encountered an error trying to infer a GraphQL type for: "${selector}".
-        There is no corresponding node with the ${linkedField || `id`}
-        field matching: "${value}"
-      `
-    )
+    if (linkedNode) {
+      invariant(
+        linkedNode,
+        oneLine`
+          Encountered an error trying to infer a GraphQL type for: "${selector}".
+          There is no corresponding node with the ${linkedField || `id`}
+          field matching: "${value}"
+        `
+      )
+    }
   }
   const validateField = (linkedNode, field) => {
-    invariant(
-      field,
-      oneLine`
-        Encountered an error trying to infer a GraphQL type for: "${selector}".
-        There is no corresponding GraphQL type "${
-          linkedNode.internal.type
-        }" available
-        to link to this node.
-      `
-    )
+    if(linkedNode) {
+      invariant(
+        field,
+        oneLine`
+          Encountered an error trying to infer a GraphQL type for: "${selector}".
+          There is no corresponding GraphQL type "${
+            linkedNode.internal.type
+          }" available
+          to link to this node.
+        `
+      )
+    }
   }
 
   const findNodeType = node =>
@@ -285,17 +289,19 @@ function inferFromFieldName(value, selector, types): GraphQLFieldConfig<*, *> {
   validateLinkedNode(linkedNode)
   const field = findNodeType(linkedNode)
   validateField(linkedNode, field)
-  return {
-    type: field.nodeObjectType,
-    resolve: (node, a, b = {}) => {
-      let fieldValue = node[key]
-      if (fieldValue) {
-        const result = findLinkedNode(fieldValue, linkedField, b.path)
-        return result
-      } else {
-        return null
-      }
-    },
+  if (field) {
+    return {
+      type: field.nodeObjectType,
+      resolve: (node, a, b = {}) => {
+        let fieldValue = node[key]
+        if (fieldValue) {
+          const result = findLinkedNode(fieldValue, linkedField, b.path)
+          return result
+        } else {
+          return null
+        }
+      },
+    }
   }
 }
 

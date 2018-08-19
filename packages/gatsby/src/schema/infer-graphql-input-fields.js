@@ -265,18 +265,20 @@ export function inferInputObjectStructureFromNodes({
       const linkedNode = findLinkedNode(nodeToFind)
 
       // Get from cache if found, else store into it
-      if (linkedNodeCache[linkedNode.internal.type]) {
-        value = linkedNodeCache[linkedNode.internal.type]
-      } else {
-        const relatedNodes = getNodes().filter(
-          node => node.internal.type === linkedNode.internal.type
-        )
-        value = getExampleValues({
-          nodes: relatedNodes,
-          typeName: linkedNode.internal.type,
-        })
-        value = recursiveOmitBy(value, (_v, _k) => _.includes(_k, `___NODE`))
-        linkedNodeCache[linkedNode.internal.type] = value
+      if(linkedNode) {
+        if (linkedNodeCache[linkedNode.internal.type]) {
+          value = linkedNodeCache[linkedNode.internal.type]
+        } else {
+          const relatedNodes = getNodes().filter(
+            node => node.internal.type === linkedNode.internal.type
+          )
+          value = getExampleValues({
+            nodes: relatedNodes,
+            typeName: linkedNode.internal.type,
+          })
+          value = recursiveOmitBy(value, (_v, _k) => _.includes(_k, `___NODE`))
+          linkedNodeCache[linkedNode.internal.type] = value
+        }
       }
 
       if (_.isArray(value)) {
